@@ -1,7 +1,7 @@
 #ifndef token_hpp
 #define token_hpp
 
-#include <_types/_uint32_t.h>
+#include <cstdint>
 #include <ostream>
 #include <string>
 #include <iostream>

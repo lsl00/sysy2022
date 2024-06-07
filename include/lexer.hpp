@@ -2,7 +2,7 @@
 #define lexer_hpp
 
 #include "token.hpp"
-#include <_types/_uint32_t.h>
+#include <cstdint>
 #include <algorithm>
 #include <cstdio>
 #include <string>

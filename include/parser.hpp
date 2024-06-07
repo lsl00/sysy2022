@@ -3,7 +3,7 @@
 
 #include "syntax_tree.hpp"
 #include "token.hpp"
-#include <_types/_uint32_t.h>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
