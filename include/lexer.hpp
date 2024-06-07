@@ -8,6 +8,13 @@
 #include <string>
 #include <vector>
 
+#ifdef __linux__
+#define eof 255
+#else
+#define eof -1
+#endif
+
+
 struct lexer {
     std::string src;
     uint32_t cur_beg;uint32_t cur;
@@ -15,7 +22,7 @@ struct lexer {
     uint32_t beg_column;uint32_t column;
     void init(){
         cur = cur_beg = 0; line = beg_column = column = 1;
-        src.push_back(EOF);
+        src.push_back(eof);
     }
     lexer(std::string&& s) : src(s) {init();}
     lexer(const std::string& s) : src(s) {init();}

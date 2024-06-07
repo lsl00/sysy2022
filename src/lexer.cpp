@@ -22,7 +22,7 @@ Token lexer::make_token(TokenType type, void *literal = nullptr){
     return t;
 }
 bool lexer::is_end(){
-    return src[cur] == EOF;
+    return src[cur] == eof;
 }
 char lexer::advance(){
     if(src[cur] == '\n'){
@@ -98,7 +98,7 @@ Token lexer::next_token(){
         advance(); //eat '"'
         return make_token(StringLiteral,new std::string(std::move(res)));
     }
-    case EOF : return make_token(Eof);
+    case eof : return make_token(Eof);
     default:{
         if(is_alpha(c)) return ident_or_keyword();
         if(is_digit(c)){
