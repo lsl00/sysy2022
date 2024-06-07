@@ -189,7 +189,8 @@ Token lexer::parse_dec(char head){
     bool is_float = false;
     while(1){
         char c = peek(0);
-        if(is_alpha(c)){
+        // std::cout << "Here-" << c <<"-";
+        if(is_digit(c)){
             advance();
             if(is_float){
                 fv += (c-'0')*base;

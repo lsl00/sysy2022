@@ -33,6 +33,7 @@ enum TokenType{
 	IntLiteral,FloatLiteral
 };
 
+std::ostream& operator<<(std::ostream&,const TokenType&);
 
 struct Token {
 	TokenType type;
@@ -40,8 +41,14 @@ struct Token {
 	uint32_t line;uint32_t column;
 	Token(TokenType type,void* literal,uint32_t line,uint32_t column) :
 		type(type),literal(literal),line(line),column(column){};
-	Token(Token&&) = default;
-	Token(Token& at) : type(at.type),line(at.line),column(at.column) {
+	Token(Token&& at) {
+		type = at.type;
+		literal = at.literal;
+		line = at.line;
+		column = at.column;
+		at.literal = nullptr;
+	};
+	Token(const Token& at) : type(at.type),line(at.line),column(at.column) {
 		switch (type) {
 		case IntLiteral : literal = new int(*(int*)at.literal);break;
 		case FloatLiteral : literal = new float(*(float*)at.literal);break;

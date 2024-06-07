@@ -28,7 +28,7 @@ std::string _token_names[] = {
 	"IntLiteral","FloatLiteral"
 };
 
-std::ostream& operator<<(std::ostream& os,TokenType t){
+std::ostream& operator<<(std::ostream& os,const TokenType &t){
 	os << _token_names[t];
     return os;
 }
