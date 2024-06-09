@@ -5,6 +5,7 @@
 #include <vector>
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "static_checker.hpp"
 #include "syntax_tree.hpp"
 using namespace std;
 
@@ -18,7 +19,14 @@ string read_file(const char* file){
     return buf.str();
 }
 
+
+ostream& operator<<(ostream& os,const VarType& vt);
+
 int main(int argc,char** argv){
+    // VarType c(true,false,Int,{5,6});
+    // auto d = c.index(0);
+    // auto e = d.index(1);
+    // cerr << e;
     if(argc == 1){
         fprintf(stderr, "Usage: %s path/to/sysy_file\n",argv[0]);
         return 1;
@@ -34,10 +42,20 @@ int main(int argc,char** argv){
     }
     parser Parser(tokens);
     ast_printerv1 a;
+    vector<CompUnit> ast;
     try{
-        for(auto cu : Parser.parse()) cu.accept(a);
+        ast = Parser.parse();
+        for(auto &cu : ast) cu.accept(a);
     }catch(string s){
         cerr << s << endl;   
     }
+    static_checker checker;
+    try{
+        checker.check(ast);
+    }catch(string s){
+        cout << s << endl;
+        return 0;
+    }
+    for(auto &cu : ast) cu.accept(a);
     return 0;
 }

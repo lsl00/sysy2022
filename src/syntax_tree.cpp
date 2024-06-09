@@ -7,7 +7,6 @@ void ast_node::accept(tree_visitor &tv){
     tv.accept(*this);
 }
 
-expr::~expr() = default;
 void expr::accept(tree_visitor &tv){
     tv.accept(*this);
 }
@@ -26,6 +25,10 @@ void float_literal_expr::accept(tree_visitor &tv){
 }
 binary_expr::~binary_expr() = default;
 void binary_expr::accept(tree_visitor &tv){
+    tv.accept(*this);
+}
+assign_expr::~assign_expr() = default;
+void assign_expr::accept(tree_visitor &tv){
     tv.accept(*this);
 }
 prefix_expr::~prefix_expr() = default;
@@ -102,6 +105,13 @@ void ast_printerv1::accept(float_literal_expr& e){
 }
 void ast_printerv1::accept(binary_expr& e) {
     std::cout << "("  << e.op << " ";
+    e.lhs->accept(*this);
+    std::cout << " ";
+    e.rhs->accept(*this);
+    std::cout << ")";
+}
+void ast_printerv1::accept(assign_expr& e){
+    std::cout << "(= ";
     e.lhs->accept(*this);
     std::cout << " ";
     e.rhs->accept(*this);

@@ -163,7 +163,11 @@ shared_ptr<expr> parser::parse_expr(int min_binding){
             }
             next();
             auto rhs = parse_expr(bp.second);
-            lhs = make_shared<binary_expr>(current.type,lhs,rhs);
+            if(current.type == Equal){
+                lhs = make_shared<assign_expr>(lhs,rhs);
+            }else{
+                lhs = make_shared<binary_expr>(current.type,lhs,rhs);
+            }
             continue;
         }
         break;
@@ -178,6 +182,7 @@ shared_ptr<init_val> parser::parse_init(){
         for(char c : *(string*)next().literal) {
             initvals.push_back(make_shared<init_val>(make_shared<int_literal_expr>(c)));
         }
+        initvals.push_back(make_shared<init_val>(make_shared<int_literal_expr>(0)));
         return make_shared<init_val>(nullptr,std::move(initvals));
     }else if(peek(0).type == LeftBrace){
         vector<shared_ptr<init_val>> initvals;
@@ -234,6 +239,7 @@ vector<pair<Type, string>> parser::parse_fparams(){
         while(match(LeftBracket)){
             if(match(RightBracket)){
                 t.dimens.push_back(make_shared<int_literal_expr>(-1));
+                continue;
             }else{
                 t.dimens.push_back(parse_expr(0));
             }

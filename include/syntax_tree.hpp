@@ -9,18 +9,85 @@
 #include <utility>
 #include <vector>
 
+struct VarType {
+	bool is_const;
+	bool is_val;
+	TokenType basetype;
+	std::vector<int> dimens;
+	int stepsize;
+
+	std::shared_ptr<char> data;
+	int size;
+	int offset;
+
+	VarType(bool is_const,bool is_val,TokenType basetype,std::vector<int> dimens)
+		:is_const(is_const),is_val(is_val),basetype(basetype),dimens(std::move(dimens)){
+			stepsize = 4;
+			for(int i = 1;i < this->dimens.size();++i) stepsize *= this->dimens[i];
+			
+			if(is_const){
+				size = stepsize;
+                if(this->dimens.size() > 0) size *= this->dimens[0];
+				offset = 0;
+				data = std::shared_ptr<char>(new char[size],[](char *p){delete [] p;});
+				memset(data.get(), 0, size);
+			}
+		};
+	VarType(bool is_const,bool is_val,TokenType basetype,std::vector<int> newdimens,std::shared_ptr<char> data,int offset)
+		: is_const(is_const),is_val(is_val),basetype(basetype),dimens(std::move(newdimens)),data(data),offset(offset){
+			stepsize = 4;
+			for(int i = 1;i < this->dimens.size();++i) stepsize *= this->dimens[i];
+			size = stepsize;
+            if(this->dimens.size()) size *= this->dimens[0];
+	}
+	VarType(VarType &&) = default;
+	VarType(const VarType &) = default;
+	VarType() = default;
+	VarType& operator=(const VarType& o) = default;
+	bool is_int(){return basetype == Int;}
+	bool is_float(){return basetype == Float;}
+	bool is_array(){return dimens.size() > 0;}
+	int int_value(){return *((int*)(data.get()+offset));}
+	float float_value(){return *((float*)(data.get()+offset));}
+	bool will_overflow(int ind){
+		if(!is_const) return false;
+		return ind >= dimens[0];
+	}
+	VarType index(int ind){ //used when *this is const array.
+		std::vector<int> newdimens;
+		for(int i = 1;i < dimens.size();++i) newdimens.push_back(dimens[i]);
+		return VarType(
+			is_const,this->is_val,basetype,
+			std::move(newdimens),
+			data,
+			offset+ind*stepsize
+		);
+	}
+	VarType index(){ //used when *this is non-const array or index is not constant.
+		std::vector<int> newdimens;
+		for(int i = 1;i < dimens.size();++i) newdimens.push_back(dimens[i]);
+		return VarType(
+			false,this->is_val,basetype,
+			std::move(newdimens)
+		);
+	}
+};
+
 struct tree_visitor;
 
 struct ast_node {
     void *info;
+    ast_node() : info(nullptr){};
     virtual void accept(tree_visitor&);
     virtual ~ast_node() ;
 };
 
 
 struct expr : ast_node {
+    VarType* type;
+    expr() : type(nullptr){};
     void accept(tree_visitor&);
-    ~expr();
+    virtual ~expr() {if(type) delete type;};
 };
 
 struct var_expr : expr {
@@ -50,6 +117,12 @@ struct binary_expr : expr {
     binary_expr(TokenType op,std::shared_ptr<expr> lhs,std::shared_ptr<expr> rhs) : op(op),lhs(lhs),rhs(rhs){};
 
     ~binary_expr();
+    void accept(tree_visitor&);
+};
+struct assign_expr : expr {
+    std::shared_ptr<expr> lhs,rhs;
+    assign_expr(std::shared_ptr<expr> lhs,std::shared_ptr<expr> rhs) : lhs(lhs),rhs(rhs){};
+    ~assign_expr();
     void accept(tree_visitor&);
 };
 struct prefix_expr : expr {
@@ -200,6 +273,7 @@ struct tree_visitor {
     virtual void accept(int_literal_expr&) = 0;
     virtual void accept(float_literal_expr&) = 0;
     virtual void accept(binary_expr&) = 0;
+    virtual void accept(assign_expr&) = 0;
     virtual void accept(prefix_expr&) = 0;
     virtual void accept(fun_call_expr&) = 0;
     virtual void accept(index_expr&) = 0;
@@ -239,6 +313,7 @@ struct ast_printerv1 : tree_visitor {
     void accept(int_literal_expr& e) final;
     void accept(float_literal_expr& e) final;
     void accept(binary_expr& e) final;
+    void accept(assign_expr& e) final;
     void accept(prefix_expr& e)final;
     void accept(fun_call_expr& e) final;
     void accept(index_expr& e)final;
